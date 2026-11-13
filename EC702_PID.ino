@@ -3,6 +3,7 @@
 #include "display.h"
 #include "input.h"
 #include "tempSensor.h"
+#include "optoInput.h"
 
 MachineState state = {
   .currentTemp = 0.0f,
@@ -28,6 +29,7 @@ PIDGains gains = {
 Display ui;
 TempSensor tempSensor;
 Input input;
+OptoInput optos;
 
 unsigned long lastTelemetryTime = 0;
 
@@ -37,6 +39,8 @@ void setup() {
 
   loadSettings(state, gains);
   while (!Serial && millis() < 2000); // wait up to 2s for USB connection
+
+  optos.begin(); // Initialize optocoupler pins
 
   if (!tempSensor.begin()) {
     Serial.println("FATAL: RTD Initialization Failed!");
@@ -53,7 +57,7 @@ void loop() {
   // 1. Read Sensor & Update Temperature / Fault State
   state.currentTemp = tempSensor.readTemperature(state);
   // 2. Read Machine Inputs
-  // TODO
+  optos.update(state);
   // 3. Read User Inputs
   int delta = 0;
   bool shortClick = false;

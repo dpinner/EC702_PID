@@ -37,3 +37,11 @@ void saveSettings(const MachineState& state, const PIDGains& pid) {
   // EEPROM.put() writes structured data safely
   EEPROM.put(EEPROM_START_ADDR, dataToSave);
 }
+
+// inefficiently does a save-read-save loop, but i'm lazy
+void reset(MachineState& state, PIDGains& pid) {
+  SettingsEEPROM fakeData;
+  fakeData.magic = EEPROM_MAGIC_BYTE + 1;
+  EEPROM.put(EEPROM_START_ADDR, fakeData);
+  loadSettings(state, pid);
+}

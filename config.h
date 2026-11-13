@@ -7,8 +7,8 @@
 // Hardware Pin Definitions (Arduino Nano R4)
 #define PIN_ENCODER_INT   2
 #define PIN_SSR_HEATER    3
-#define PIN_OPTO_PUMP     4   // Optocoupler for brewing / pump status
-#define PIN_OPTO_STEAM    5   // Optocoupler for steam mode switch
+#define PIN_OPTO_STEAM    7   // Optocoupler for steam mode switch
+#define PIN_OPTO_PUMP     8   // Optocoupler for brewing / pump status
 
 // MAX31865 SPI Pins
 #define PIN_MAX_CS        10
@@ -59,5 +59,6 @@ struct MachineState {
 
 void loadSettings(MachineState& state, PIDGains& pid);
 void saveSettings(const MachineState& state, const PIDGains& pid);
+void reset(MachineState& state, PIDGains& pid);
 
 #endif

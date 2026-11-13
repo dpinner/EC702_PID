@@ -3,9 +3,10 @@
 const MenuItem MAIN_MENU_ITEMS[] = {
   { "T", "Set Temp",      ACTION_EDIT_TEMP        },
   { "C", "Calibrate RTD", ACTION_EDIT_CALIBRATION },
-  { "P", "Set PID Gains", ACTION_OPEN_PID_MENU    }
+  { "P", "Set PID Gains", ACTION_OPEN_PID_MENU    },
+  { "R", "Reset",         ACTION_RESET            }
 };
-const uint8_t MAIN_MENU_COUNT = 3;
+const uint8_t MAIN_MENU_COUNT = 4;
 
 // PID Submenu Definitions
 const MenuItem PID_MENU_ITEMS[] = {
@@ -247,6 +248,11 @@ void Display::handleMenuSelection(int delta, bool act, const MenuItem* items, ui
       case ACTION_OPEN_PID_MENU:
         currentMode = PID_MENU;
         menuIndex = 0; // Reset index for the new menu
+        break;
+      case ACTION_RESET:
+        reset(state, pid);
+        Serial.print(state.brewSetpoint);
+        currentMode = HOME;
         break;
       case ACTION_AUTOTUNE:
         currentMode = AUTOTUNE;
