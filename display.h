@@ -21,6 +21,7 @@ enum UIState {
   EDIT_KP,
   EDIT_KI,
   EDIT_KD,
+  EDIT_FF,
   AUTOTUNE
 };
 
@@ -33,7 +34,8 @@ enum MenuAction {
   ACTION_AUTOTUNE,
   ACTION_EDIT_KP,
   ACTION_EDIT_KI,
-  ACTION_EDIT_KD
+  ACTION_EDIT_KD,
+  ACTION_EDIT_FF
 };
 
 struct MenuItem {

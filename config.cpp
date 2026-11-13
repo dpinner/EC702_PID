@@ -10,12 +10,14 @@ void loadSettings(MachineState& state, PIDGains& pid) {
     state.brewSetpoint = DEFAULT_BREW_SETPOINT;
     state.steamSetpoint = DEFAULT_STEAM_SETPOINT;
     state.rtdOffset = DEFAULT_TEMP_OFFSET;
-    pid.brewKp = 2.0f;
-    pid.steamKp = 2.0f;
-    pid.brewKi = 0.5f;
-    pid.steamKi = 0.5f;
-    pid.brewKd = 0.1f;
-    pid.steamKd = 0.1f;
+    pid.brewKp = DEFAULT_KP;
+    pid.steamKp = DEFAULT_KP;
+    pid.brewKi = DEFAULT_KI;
+    pid.steamKi = DEFAULT_KI;
+    pid.brewKd = DEFAULT_KD;
+    pid.steamKd = DEFAULT_KD;
+    pid.brewFF = DEFAULT_BREW_FF;
+    pid.steamFF = DEFAULT_STEAM_FF;
     saveSettings(state, pid); // Write initial valid state to EEPROM
   } else {
     // Load persisted values into active runtime structs

@@ -19,11 +19,17 @@
 
 // Default Settings
 #define DEFAULT_BREW_SETPOINT   93.0f
-#define DEFAULT_STEAM_SETPOINT 140.0f
+#define DEFAULT_STEAM_SETPOINT 125.0f
 #define DEFAULT_TEMP_OFFSET      0.0f
+#define DEFAULT_KP               2.0f
+#define DEFAULT_KI               0.5f
+#define DEFAULT_KD               0.1f
+#define DEFAULT_BREW_FF         35.0f
+#define DEFAULT_STEAM_FF        15.0f
+#define MAX_SAFE_TEMP          145.0f
 
 // EEPROM Configuration Constants
-#define EEPROM_MAGIC_BYTE     0x43
+#define EEPROM_MAGIC_BYTE     0x42
 #define EEPROM_START_ADDR     0
 #define TELEMETRY_INTERVAL_MS 200
 
@@ -34,6 +40,8 @@ struct PIDGains {
   float steamKi;
   float brewKd;
   float steamKd;
+  float brewFF;
+  float steamFF;
 };
 
 // data saved to persistent EEPROM memory

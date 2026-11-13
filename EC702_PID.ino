@@ -4,6 +4,7 @@
 #include "input.h"
 #include "tempSensor.h"
 #include "optoInput.h"
+#include "pidController.h"
 
 MachineState state = {
   .currentTemp = 0.0f,
@@ -30,6 +31,7 @@ Display ui;
 TempSensor tempSensor;
 Input input;
 OptoInput optos;
+PIDController controller;
 
 unsigned long lastTelemetryTime = 0;
 
@@ -67,7 +69,9 @@ void loop() {
   }
   // 4. Update Display
   ui.update(state, gains);
-  // 5. USB Telemetry Streaming (Non-blocking)
+  // 5. Compute PID
+  float output = controller.compute(state, gains);
+  // 6. USB Telemetry Streaming (Non-blocking)
   if (Serial) {
     unsigned long currentMillis = millis();
     if (currentMillis - lastTelemetryTime >= TELEMETRY_INTERVAL_MS) {
@@ -79,7 +83,9 @@ void loop() {
       Serial.print("Temp:");
       Serial.print(state.currentTemp, 2);
       Serial.print(", Setpoint:");
-      Serial.println(activeSetpoint, 2);
+      Serial.print(activeSetpoint, 2);
+      Serial.print(", Output:");
+      Serial.print(output * activeSetpoint / 100.0f, 2); // scale for easy visualizing
     }
   }
 }

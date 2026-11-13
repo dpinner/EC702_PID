@@ -10,12 +10,13 @@ const uint8_t MAIN_MENU_COUNT = 4;
 
 // PID Submenu Definitions
 const MenuItem PID_MENU_ITEMS[] = {
-  { "A",  "Autotune", ACTION_AUTOTUNE },
-  { "Kp", "Set Kp",   ACTION_EDIT_KP  },
-  { "Ki", "Set Ki",   ACTION_EDIT_KI  },
-  { "Kd", "Set Kd",   ACTION_EDIT_KD  }
+  { "A", "Autotune",         ACTION_AUTOTUNE },
+  { "P", "Set Kp",           ACTION_EDIT_KP  },
+  { "I", "Set Ki",           ACTION_EDIT_KI  },
+  { "D", "Set Kd",           ACTION_EDIT_KD  },
+  { "F", "Set Feed-Forward", ACTION_EDIT_FF }
 };
-const uint8_t PID_MENU_COUNT = 4;
+const uint8_t PID_MENU_COUNT = 5;
 
 Display::Display() : currentMode(HOME), menuIndex(0), editBuffer(0.0f) {}
 
@@ -65,6 +66,9 @@ void Display::update(const MachineState& state, const PIDGains& pid) {
       break;
     case EDIT_KD:
       renderEdit(state.isSteamMode ? "Set Steam Kd" : "Set Brew Kd", editBuffer, "", false);
+      break;
+    case EDIT_FF:
+      renderEdit(state.isSteamMode ? "Set Steam FF" : "Set Brew FF", editBuffer, "%", false);
       break;
     case AUTOTUNE:
       lcd.setCursor(0, 0);
@@ -177,6 +181,7 @@ void Display::handleInput(int delta, bool shortClick, bool longClick, MachineSta
 
     case EDIT_TEMP:
       if (delta != 0) editBuffer += (delta * 0.5f);
+      editBuffer = constrain(editBuffer, 0.0f, MAX_SAFE_TEMP);
       if (shortClick) {
         if (state.isSteamMode) state.steamSetpoint = editBuffer;
         else state.brewSetpoint = editBuffer;
@@ -218,6 +223,16 @@ void Display::handleInput(int delta, bool shortClick, bool longClick, MachineSta
       if (shortClick) { 
         if (state.isSteamMode) pid.steamKd = editBuffer;
         else pid.brewKd = editBuffer;
+        saveSettings(state, pid);
+        currentMode = PID_MENU; }
+      break;
+
+    case EDIT_FF:
+      if (delta != 0) editBuffer += (delta * 1.0f);
+      editBuffer = constrain(editBuffer, 0.0f, 100.0f);
+      if (shortClick) { 
+        if (state.isSteamMode) pid.steamFF = editBuffer;
+        else pid.brewFF = editBuffer;
         saveSettings(state, pid);
         currentMode = PID_MENU; }
       break;
@@ -268,6 +283,10 @@ void Display::handleMenuSelection(int delta, bool act, const MenuItem* items, ui
       case ACTION_EDIT_KD:
         editBuffer = state.isSteamMode ? pid.steamKd : pid.brewKd;
         currentMode = EDIT_KD;
+        break;
+      case ACTION_EDIT_FF:
+        editBuffer = state.isSteamMode ? pid.steamFF : pid.brewFF;
+        currentMode = EDIT_FF;
         break;
       default:
         break;
