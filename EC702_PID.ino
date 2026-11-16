@@ -85,7 +85,7 @@ void loop() {
       Serial.print(", Setpoint:");
       Serial.print(activeSetpoint, 2);
       Serial.print(", Output:");
-      Serial.print(output * activeSetpoint / 100.0f, 2); // scale for easy visualizing
+      Serial.println(output, 2);
     }
   }
 }
