@@ -43,6 +43,7 @@ void setup() {
   while (!Serial && millis() < 2000); // wait up to 2s for USB connection
 
   optos.begin(); // Initialize optocoupler pins
+  controller.begin();  // and the SSR PWM pin / temp controller
 
   if (!tempSensor.begin()) {
     Serial.println("FATAL: RTD Initialization Failed!");
@@ -65,10 +66,10 @@ void loop() {
   bool shortClick = false;
   bool longClick = false;
   if (input.poll(delta, shortClick, longClick)) {
-    ui.handleInput(delta, shortClick, longClick, state, gains);
+    ui.handleInput(delta, shortClick, longClick, state, gains, controller);
   }
   // 4. Update Display
-  ui.update(state, gains);
+  ui.update(state, gains, controller);
   // 5. Compute PID
   float output = controller.compute(state, gains);
   // 6. USB Telemetry Streaming (Non-blocking)

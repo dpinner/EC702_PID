@@ -29,7 +29,7 @@ bool Display::begin() {
   return true;
 }
 
-void Display::update(const MachineState& state, const PIDGains& pid) {
+void Display::update(const MachineState& state, const PIDGains& pid, const PIDController& controller) {
   // CRITICAL SAFETY OVERRIDE: Show hardware fault code if present
   if (state.sensorFaultCode != 0) {
     lcd.setCursor(0, 0);
@@ -71,10 +71,15 @@ void Display::update(const MachineState& state, const PIDGains& pid) {
       renderEdit(state.isSteamMode ? "Set Steam FF" : "Set Brew FF", editBuffer, "%", false);
       break;
     case AUTOTUNE:
-      lcd.setCursor(0, 0);
-      lcd.print(pad("AUTOTUNE ACTIVE"));
-      lcd.setCursor(0, 1);
-      lcd.print(pad("Hold to Abort..."));
+      if (!controller.isTuning()) {
+        currentMode = HOME; // Automatically pop back to the home screen
+        renderHome(state);
+      } else {
+        lcd.setCursor(0, 0);
+        lcd.print(pad("AUTOTUNE ACTIVE"));
+        lcd.setCursor(0, 1);
+        lcd.print(pad("Hold to Abort..."));
+      }
       break;
   }
 }
@@ -143,10 +148,13 @@ void Display::renderEdit(const char* label, float value, const char* unit, bool 
   lcd.print(pad(targetBuf));
 }
 
-void Display::handleInput(int delta, bool shortClick, bool longClick, MachineState& state, PIDGains& pid) {
+void Display::handleInput(int delta, bool shortClick, bool longClick, MachineState& state, PIDGains& pid, PIDController& controller) {
   // Long press always acts as a universal cancel / back action
   if (longClick) {
-    if (currentMode == EDIT_KP || currentMode == EDIT_KI || currentMode == EDIT_KD || currentMode == AUTOTUNE) {
+    if (currentMode == AUTOTUNE) {
+      controller.cancelAutotune();
+      currentMode = PID_MENU;
+    } else if (currentMode == EDIT_KP || currentMode == EDIT_KI || currentMode == EDIT_KD) {
       currentMode = PID_MENU;
       menuIndex = 0;
     } else {
@@ -172,11 +180,11 @@ void Display::handleInput(int delta, bool shortClick, bool longClick, MachineSta
       break;
 
     case MAIN_MENU:
-      handleMenuSelection(delta, shortClick, MAIN_MENU_ITEMS, MAIN_MENU_COUNT, state, pid);
+      handleMenuSelection(delta, shortClick, MAIN_MENU_ITEMS, MAIN_MENU_COUNT, state, pid, controller);
       break;
 
     case PID_MENU:
-      handleMenuSelection(delta, shortClick, PID_MENU_ITEMS, PID_MENU_COUNT, state, pid);
+      handleMenuSelection(delta, shortClick, PID_MENU_ITEMS, PID_MENU_COUNT, state, pid, controller);
       break;
 
     case EDIT_TEMP:
@@ -244,7 +252,7 @@ void Display::handleInput(int delta, bool shortClick, bool longClick, MachineSta
 }
 
 // Helper to handle menu navigation and selection generically
-void Display::handleMenuSelection(int delta, bool act, const MenuItem* items, uint8_t count, MachineState& state, PIDGains& pid) {
+void Display::handleMenuSelection(int delta, bool act, const MenuItem* items, uint8_t count, MachineState& state, PIDGains& pid, PIDController& controller) {
   if (delta != 0) {
     menuIndex = ((menuIndex + delta) % count + count) % count;
     return;
@@ -270,6 +278,7 @@ void Display::handleMenuSelection(int delta, bool act, const MenuItem* items, ui
         currentMode = HOME;
         break;
       case ACTION_AUTOTUNE:
+        controller.startAutotune(state);
         currentMode = AUTOTUNE;
         break;
       case ACTION_EDIT_KP:

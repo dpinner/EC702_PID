@@ -3,12 +3,18 @@
 
 #include <Arduino.h>
 #include "config.h"
+#include "pidAutoTune.h"
 
 class PIDController {
 public:
   PIDController();
   void begin();
-  float compute(const MachineState& state, const PIDGains& gains);
+  float compute(const MachineState& state, PIDGains& gains);
+
+  // Autotune triggers called by the UI / Display
+  void startAutotune(const MachineState& state);
+  void cancelAutotune();
+  bool isTuning() const;
 
 private:
   unsigned long lastComputeTime;
@@ -23,6 +29,11 @@ private:
 
   const float outMin = 0.0f;
   const float outMax = 100.0f;
+
+  float tuneInput;
+  float tuneOutput;
+  PID_ATune aTune;
+  bool tuningActive;
 };
 
 #endif

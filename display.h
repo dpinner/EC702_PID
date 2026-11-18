@@ -6,6 +6,7 @@
 #include <hd44780.h>
 #include <hd44780ioClass/hd44780_I2Cexp.h>
 #include "config.h"
+#include "pidController.h"
 
 // Display params
 #define DISPLAY_COLS      16
@@ -48,8 +49,8 @@ class Display {
 public:
   Display();
   bool begin();
-  void update(const MachineState& state, const PIDGains& pid);
-  void handleInput(int delta, bool shortClick, bool longClick, MachineState& state, PIDGains& pid);
+  void update(const MachineState& state, const PIDGains& pid, const PIDController& controller);
+  void handleInput(int delta, bool shortClick, bool longClick, MachineState& state, PIDGains& pid, PIDController& controller);
 
 private:
   hd44780_I2Cexp lcd;
@@ -61,7 +62,7 @@ private:
   void renderHome(const MachineState& state);
   void renderMenu(const MenuItem* items, uint8_t count, uint8_t selectedIndex);
   void renderEdit(const char* label, float value, const char* unit, bool isTemp);
-  void handleMenuSelection(int delta, bool act, const MenuItem* items, uint8_t count, MachineState& state, PIDGains& pid);
+  void handleMenuSelection(int delta, bool act, const MenuItem* items, uint8_t count, MachineState& state, PIDGains& pid, PIDController& controller);
 };
 
 #endif
