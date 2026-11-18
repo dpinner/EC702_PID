@@ -9,6 +9,7 @@ public:
   TempSensor();
   bool begin();
   float readTemperature(MachineState &state); // Returns temp and updates fault code
+  bool updateTemperature(float currentTemp, MachineState &state); // updates offset value; NOTE: doesn't save to EEPROM
 
 private:
   Adafruit_MAX31865 max31865;

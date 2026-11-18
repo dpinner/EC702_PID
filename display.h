@@ -49,8 +49,8 @@ class Display {
 public:
   Display();
   bool begin();
-  void update(const MachineState& state, const PIDGains& pid, const PIDController& controller);
-  void handleInput(int delta, bool shortClick, bool longClick, MachineState& state, PIDGains& pid, PIDController& controller);
+  void update(const MachineState& state, const PIDGains& pid, const System& sys);
+  void handleInput(int delta, bool shortClick, bool longClick, MachineState& state, PIDGains& pid, System& sys);
 
 private:
   hd44780_I2Cexp lcd;
@@ -62,7 +62,7 @@ private:
   void renderHome(const MachineState& state);
   void renderMenu(const MenuItem* items, uint8_t count, uint8_t selectedIndex);
   void renderEdit(const char* label, float value, const char* unit, bool isTemp);
-  void handleMenuSelection(int delta, bool act, const MenuItem* items, uint8_t count, MachineState& state, PIDGains& pid, PIDController& controller);
+  void handleMenuSelection(int delta, bool act, const MenuItem* items, uint8_t count, MachineState& state, PIDGains& pid, System& sys);
 };
 
 #endif

@@ -33,6 +33,12 @@
 #define EEPROM_START_ADDR     0
 #define TELEMETRY_INTERVAL_MS 200
 
+// Forward declarations
+class TempSensor;
+class OptoInput;
+class Input;
+class PIDController;
+
 struct PIDGains {
   float brewKp;
   float steamKp;
@@ -63,6 +69,13 @@ struct MachineState {
   uint8_t sensorFaultCode;  // Stores the MAX31865 fault register value (0 = no fault)
   unsigned long shotStartTime;
   unsigned long shotDurationMillis;
+};
+
+struct System {
+  TempSensor &tempSensor;
+  OptoInput &optos;
+  Input &input;
+  PIDController &controller;
 };
 
 void loadSettings(MachineState& state, PIDGains& pid);

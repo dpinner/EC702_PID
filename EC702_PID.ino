@@ -33,6 +33,8 @@ Input input;
 OptoInput optos;
 PIDController controller;
 
+System sys = { tempSensor, optos, input, controller };
+
 unsigned long lastTelemetryTime = 0;
 
 void setup() {
@@ -66,10 +68,10 @@ void loop() {
   bool shortClick = false;
   bool longClick = false;
   if (input.poll(delta, shortClick, longClick)) {
-    ui.handleInput(delta, shortClick, longClick, state, gains, controller);
+    ui.handleInput(delta, shortClick, longClick, state, gains, sys);
   }
   // 4. Update Display
-  ui.update(state, gains, controller);
+  ui.update(state, gains, sys);
   // 5. Compute PID
   float output = controller.compute(state, gains);
   // 6. USB Telemetry Streaming (Non-blocking)
@@ -83,6 +85,8 @@ void loop() {
       // Output format optimized for Arduino Serial Plotter: Label:Value, Label:Value
       Serial.print("Temp:");
       Serial.print(state.currentTemp, 2);
+      // Serial.print(", Raw Temp:");
+      // Serial.print(state.currentTemp - state.rtdOffset, 2);
       Serial.print(", Setpoint:");
       Serial.print(activeSetpoint, 2);
       Serial.print(", Output:");

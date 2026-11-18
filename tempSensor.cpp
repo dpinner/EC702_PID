@@ -19,3 +19,15 @@ float TempSensor::readTemperature(MachineState &state) {
   float rawTemp = max31865.temperature(RNOMINAL, RREF);
   return rawTemp + state.rtdOffset;
 }
+
+bool TempSensor::updateTemperature(float currentTemp, MachineState &state) {
+  state.sensorFaultCode = max31865.readFault();
+  if (state.sensorFaultCode) {
+    max31865.clearFault();
+    return false;
+  }
+
+  float rawTemp = max31865.temperature(RNOMINAL, RREF);
+  state.rtdOffset = currentTemp - rawTemp;
+  return true;
+}

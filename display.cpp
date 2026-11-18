@@ -1,4 +1,6 @@
 #include "display.h"
+#include "tempSensor.h"
+#include "pidController.h"
 
 const MenuItem MAIN_MENU_ITEMS[] = {
   { "T", "Set Temp",      ACTION_EDIT_TEMP        },
@@ -29,7 +31,7 @@ bool Display::begin() {
   return true;
 }
 
-void Display::update(const MachineState& state, const PIDGains& pid, const PIDController& controller) {
+void Display::update(const MachineState& state, const PIDGains& pid, const System& sys) {
   // CRITICAL SAFETY OVERRIDE: Show hardware fault code if present
   if (state.sensorFaultCode != 0) {
     lcd.setCursor(0, 0);
@@ -71,7 +73,7 @@ void Display::update(const MachineState& state, const PIDGains& pid, const PIDCo
       renderEdit(state.isSteamMode ? "Set Steam FF" : "Set Brew FF", editBuffer, "%", false);
       break;
     case AUTOTUNE:
-      if (!controller.isTuning()) {
+      if (!sys.controller.isTuning()) {
         currentMode = HOME; // Automatically pop back to the home screen
         renderHome(state);
       } else {
@@ -148,11 +150,11 @@ void Display::renderEdit(const char* label, float value, const char* unit, bool 
   lcd.print(pad(targetBuf));
 }
 
-void Display::handleInput(int delta, bool shortClick, bool longClick, MachineState& state, PIDGains& pid, PIDController& controller) {
+void Display::handleInput(int delta, bool shortClick, bool longClick, MachineState& state, PIDGains& pid, System& sys) {
   // Long press always acts as a universal cancel / back action
   if (longClick) {
     if (currentMode == AUTOTUNE) {
-      controller.cancelAutotune();
+      sys.controller.cancelAutotune();
       currentMode = PID_MENU;
     } else if (currentMode == EDIT_KP || currentMode == EDIT_KI || currentMode == EDIT_KD) {
       currentMode = PID_MENU;
@@ -180,11 +182,11 @@ void Display::handleInput(int delta, bool shortClick, bool longClick, MachineSta
       break;
 
     case MAIN_MENU:
-      handleMenuSelection(delta, shortClick, MAIN_MENU_ITEMS, MAIN_MENU_COUNT, state, pid, controller);
+      handleMenuSelection(delta, shortClick, MAIN_MENU_ITEMS, MAIN_MENU_COUNT, state, pid, sys);
       break;
 
     case PID_MENU:
-      handleMenuSelection(delta, shortClick, PID_MENU_ITEMS, PID_MENU_COUNT, state, pid, controller);
+      handleMenuSelection(delta, shortClick, PID_MENU_ITEMS, PID_MENU_COUNT, state, pid, sys);
       break;
 
     case EDIT_TEMP:
@@ -201,10 +203,11 @@ void Display::handleInput(int delta, bool shortClick, bool longClick, MachineSta
     case CALIBRATE_RTD:
       if (delta != 0) editBuffer += (delta * 0.1f);
       if (shortClick) {
-        // Adjust offset by the difference between user's reference temp and current reading
-        state.rtdOffset += (editBuffer - state.currentTemp);
-        saveSettings(state, pid);
-        currentMode = HOME;
+        if (sys.tempSensor.updateTemperature(editBuffer, state)) {
+          saveSettings(state, pid);
+          state.currentTemp = sys.tempSensor.readTemperature(state);
+          currentMode = HOME;
+        }
       }
       break;
 
@@ -252,7 +255,7 @@ void Display::handleInput(int delta, bool shortClick, bool longClick, MachineSta
 }
 
 // Helper to handle menu navigation and selection generically
-void Display::handleMenuSelection(int delta, bool act, const MenuItem* items, uint8_t count, MachineState& state, PIDGains& pid, PIDController& controller) {
+void Display::handleMenuSelection(int delta, bool act, const MenuItem* items, uint8_t count, MachineState& state, PIDGains& pid, System& sys) {
   if (delta != 0) {
     menuIndex = ((menuIndex + delta) % count + count) % count;
     return;
@@ -274,11 +277,10 @@ void Display::handleMenuSelection(int delta, bool act, const MenuItem* items, ui
         break;
       case ACTION_RESET:
         reset(state, pid);
-        Serial.print(state.brewSetpoint);
         currentMode = HOME;
         break;
       case ACTION_AUTOTUNE:
-        controller.startAutotune(state);
+        sys.controller.startAutotune(state);
         currentMode = AUTOTUNE;
         break;
       case ACTION_EDIT_KP:
