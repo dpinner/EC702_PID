@@ -41,6 +41,7 @@ float PIDController::compute(const MachineState& state, PIDGains& gains) {
 
     // Feed the autotune relay output (0 or 100) into currentOutput 
     // so the time-proportioning block below handles SSR pulsing automatically!
+    tuneOutput = constrain(tuneOutput, outMin, outMax);
     currentOutput = tuneOutput;
 
     // Check if tuning cycle has successfully finished
