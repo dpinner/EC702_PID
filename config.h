@@ -26,7 +26,7 @@
 #define DEFAULT_KD               0.1f
 #define DEFAULT_BREW_FF         35.0f
 #define DEFAULT_STEAM_FF        15.0f
-#define MAX_SAFE_TEMP          145.0f
+#define MAX_SAFE_TEMP          135.0f
 
 // EEPROM Configuration Constants
 #define EEPROM_MAGIC_BYTE     0x42

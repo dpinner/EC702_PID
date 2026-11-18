@@ -40,7 +40,7 @@ void setup() {
   Wire.begin();
 
   loadSettings(state, gains);
-  while (!Serial && millis() < 2000); // wait up to 2s for USB connection
+  while (!Serial && millis() < 1000); // wait up to 1s for USB connection
 
   optos.begin(); // Initialize optocoupler pins
   controller.begin();  // and the SSR PWM pin / temp controller
