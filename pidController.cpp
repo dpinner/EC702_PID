@@ -49,6 +49,13 @@ float PIDController::compute(const MachineState& state, PIDGains& gains) {
       gains.brewKp = aTune.GetKp();
       gains.brewKi = aTune.GetKi();
       gains.brewKd = aTune.GetKd();
+      Serial.println("AUTOTUNE COMPLETE");
+      Serial.print("Kp: ");
+      Serial.println(gains.brewKp);
+      Serial.print("Ki: ");
+      Serial.println(gains.brewKi);
+      Serial.print("Kd: ");
+      Serial.println(gains.brewKd);
       gains.steamKp = aTune.GetKp();
       gains.steamKi = aTune.GetKi();
       gains.steamKd = aTune.GetKd();
@@ -75,11 +82,6 @@ float PIDController::compute(const MachineState& state, PIDGains& gains) {
 
       float pTerm = kp * error;
 
-      // include ki in integral to support on-the-fly tuning
-      iTerm += ki * error * dt;
-      // "anti-windup" -- don't allow integral term to grow without bound
-      iTerm = constrain(iTerm, outMin, outMax);
-
       // derivative on measurement (eliminates derivative kick on setpoint change)
       float dInput = 0.0f; // prevent initial derivative spikes
       if (!initialized) {
@@ -95,6 +97,18 @@ float PIDController::compute(const MachineState& state, PIDGains& gains) {
         feedForward = gains.brewFF; // offsets cold water in-rush
       } else if (state.isSteamMode) {
         feedForward = gains.steamFF; // baseline maintenance power for steam
+      }
+
+      if (abs(error) > 15.0) {
+        // let P do the heavy lifting during cold startup
+        iTerm = 0.0;
+      } else {
+        // include ki in integral to support on-the-fly tuning
+        iTerm += ki * error * dt;
+        // anti-windup: don't allow integral term to grow without bound
+        // calculate how much "room" is left for I
+        float iMax = constrain(outMax - pTerm - dTerm - feedForward, outMin, outMax);
+        iTerm = constrain(iTerm, outMin, iMax);
       }
 
       // save input for next derivative cycle
@@ -125,7 +139,7 @@ float PIDController::compute(const MachineState& state, PIDGains& gains) {
 
 void PIDController::startAutotune(const MachineState& state) {
   tuneInput = state.currentTemp;
-  aTune.SetOutputStep(100.0); // Full power heater step
+  aTune.SetOutputStep(50.0); // half power heater step
   aTune.SetControlType(1);  // PID mode
   aTune.SetLookbackSec(20);
   aTune.SetNoiseBand(0.5);
